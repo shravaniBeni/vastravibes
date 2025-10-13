@@ -22,6 +22,7 @@ export interface FirestoreUser {
 // Context type
 interface MyContextType {
   loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   currentUser: User | null;
   firestoreUser: FirestoreUser | null;
   isProfileComplete: boolean;
@@ -29,7 +30,8 @@ interface MyContextType {
 }
 
 export const MyContext = createContext<MyContextType>({
-  loading: true,
+  loading: false,
+  setLoading: () => {},
   currentUser: null,
   firestoreUser: null,
   isProfileComplete: false,
@@ -89,6 +91,7 @@ export const MyContextProvider: React.FC<{ children: React.ReactNode }> = ({
     <MyContext.Provider
       value={{
         loading,
+        setLoading,
         currentUser,
         firestoreUser,
         isProfileComplete,

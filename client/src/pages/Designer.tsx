@@ -41,7 +41,10 @@ const Designer: React.FC = () => {
   const featuredDesigner = isOwner
     ? {
         uid: currentUser?.uid,
-        name: firestoreUser?.name || "Your Name",
+        name:
+          `${firestoreUser.firstName || ""} ${
+            firestoreUser.lastName || ""
+          }`.trim() || "Unnamed",
         username: `@${firestoreUser?.username || "you"}`,
         specialty: firestoreUser?.specialty || "Your Specialty",
         location: firestoreUser?.location || "Your Location",
@@ -131,11 +134,7 @@ const Designer: React.FC = () => {
               <Avatar className="h-24 w-24 border-4 border-black/10 shadow-lg">
                 <AvatarImage src={featuredDesigner.avatar} />
                 <AvatarFallback className="text-2xl bg-gray-100 text-gray-900">
-                  {featuredDesigner.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()}
+                  {featuredDesigner.name}
                 </AvatarFallback>
               </Avatar>
               {featuredDesigner.verified && (
