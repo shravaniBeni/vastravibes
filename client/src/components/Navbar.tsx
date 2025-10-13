@@ -8,8 +8,9 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase/FirebaseConfig";
 import { useEffect } from "react";
 import ProfileModal from "./ProfileSetupModal";
-
+import { useNavigate } from "react-router-dom";
 const Navbar = () => {
+  const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const location = useLocation();
@@ -54,6 +55,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await signOut(auth);
+    navigate("/login")
     setDropdownOpen(false);
   };
 
@@ -74,11 +76,10 @@ const Navbar = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  isActive(item.path)
-                    ? "text-primary border-b-2 border-primary"
-                    : "text-muted-foreground"
-                }`}
+                className={`text-sm font-medium transition-colors hover:text-primary ${isActive(item.path)
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground"
+                  }`}
               >
                 {item.name}
               </Link>
@@ -113,11 +114,10 @@ const Navbar = () => {
                       <Link
                         key={item.name}
                         to={item.path}
-                        className={`text-lg font-medium transition-colors hover:text-primary ${
-                          isActive(item.path)
-                            ? "text-primary"
-                            : "text-muted-foreground"
-                        }`}
+                        className={`text-lg font-medium transition-colors hover:text-primary ${isActive(item.path)
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                          }`}
                         onClick={() => setIsSearchOpen(false)}
                       >
                         {item.name}
@@ -176,11 +176,10 @@ const Navbar = () => {
                       <Link
                         key={item.name}
                         to={item.path}
-                        className={`text-lg font-medium transition-colors hover:text-primary ${
-                          isActive(item.path)
-                            ? "text-primary"
-                            : "text-muted-foreground"
-                        }`}
+                        className={`text-lg font-medium transition-colors hover:text-primary ${isActive(item.path)
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                          }`}
                         onClick={() => setIsSearchOpen(false)}
                       >
                         {item.name}

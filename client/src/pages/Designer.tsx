@@ -25,10 +25,21 @@ import blackDress from "@/assets/black-dress.jpg";
 import linenBlazer from "@/assets/linen-blazer.jpg";
 
 const Designer: React.FC = () => {
-  const { currentUser } = useContext(MyContext);
+  const { loading, currentUser, firestoreUser, isProfileComplete } = useContext(MyContext);
+
+
+  if (loading) {
+    return <div className="text-center mt-20">Loading profile...</div>;
+  }
+
+  if (!firestoreUser) {
+    return <div className="text-center mt-20">User data not found</div>;
+  }
+
+
   const { id } = useParams<{ id: string }>();
   const isOwner = currentUser?.uid === id;
-  const { firestoreUser } = useContext(MyContext);
+  // const { firestoreUser } = useContext(MyContext);
   console.log("firestoreUser in Designer:", firestoreUser);
 
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
@@ -37,45 +48,46 @@ const Designer: React.FC = () => {
     setIsFollowing((prev) => !prev);
     // TODO: Call API or Firebase to update follow status
   };
+  // console.log(isOwner);
 
   const featuredDesigner = isOwner
     ? {
-        uid: currentUser?.uid,
-        name: firestoreUser?.name || "Your Name",
-        username: `@${firestoreUser?.username || "you"}`,
-        specialty: firestoreUser?.specialty || "Your Specialty",
-        location: firestoreUser?.location || "Your Location",
-        rating: firestoreUser?.rating || 5.0,
-        reviews: firestoreUser?.reviews || 0,
-        products: firestoreUser?.products || 0,
-        followers: firestoreUser?.followers || 0,
-        following: firestoreUser?.following || 0,
-        joinDate: firestoreUser?.joinDate || "Recently Joined",
-        description:
-          firestoreUser?.description ||
-          "Welcome to your profile! Start adding products and posts.",
-        avatar: firestoreUser?.avatar || "/placeholder.svg",
-        verified: firestoreUser?.verified || false,
-        postsCount: firestoreUser?.postsCount || 0,
-      }
+      uid: currentUser?.uid,
+      name: firestoreUser?.firstName || "Your Name",
+      username: `@${firestoreUser?.username || "you"}`,
+      specialty: firestoreUser?.specialty || "Your Specialty",
+      location: firestoreUser?.location || "Your Location",
+      rating: firestoreUser?.rating || 5.0,
+      reviews: firestoreUser?.reviews || 0,
+      products: firestoreUser?.products || 0,
+      followers: firestoreUser?.followers || 0,
+      following: firestoreUser?.following || 0,
+      joinDate: firestoreUser?.joinDate || "Recently Joined",
+      description:
+        firestoreUser?.description ||
+        "Welcome to your profile! Start adding products and posts.",
+      avatar: firestoreUser?.avatar || "/placeholder.svg",
+      verified: firestoreUser?.verified || false,
+      postsCount: firestoreUser?.postsCount || 0,
+    }
     : {
-        uid: id || "1",
-        name: "Priya Sharma",
-        username: "@priyaweaves",
-        specialty: "Banarasi Silk Weaving",
-        location: "Varanasi, India",
-        rating: 4.8,
-        reviews: 342,
-        products: 145,
-        followers: 12547,
-        following: 89,
-        joinDate: "March 2021",
-        description:
-          "Traditional weaver from Varanasi creating authentic Banarasi silk sarees.",
-        avatar: "/placeholder.svg",
-        verified: true,
-        postsCount: 23,
-      };
+      uid: id || "1",
+      name: "Priya Sharma",
+      username: "@priyaweaves",
+      specialty: "Banarasi Silk Weaving",
+      location: "Varanasi, India",
+      rating: 4.8,
+      reviews: 342,
+      products: 145,
+      followers: 12547,
+      following: 89,
+      joinDate: "March 2021",
+      description:
+        "Traditional weaver from Varanasi creating authentic Banarasi silk sarees.",
+      avatar: "/placeholder.svg",
+      verified: true,
+      postsCount: 23,
+    };
 
   const designerProducts = [
     {
@@ -220,11 +232,10 @@ const Designer: React.FC = () => {
               ) : (
                 <>
                   <Button
-                    className={`px-6 ${
-                      isFollowing
-                        ? "bg-gray-200 text-gray-900"
-                        : "bg-primary text-white"
-                    }`}
+                    className={`px-6 ${isFollowing
+                      ? "bg-gray-200 text-gray-900"
+                      : "bg-primary text-white"
+                      }`}
                     onClick={handleFollowToggle}
                   >
                     {isFollowing ? "Following" : "Follow"}
@@ -288,11 +299,10 @@ const Designer: React.FC = () => {
                             onClick={(e) => e.stopPropagation()}
                           >
                             <Heart
-                              className={`h-4 w-4 ${
-                                product.isLiked
-                                  ? "fill-gray-900 text-gray-900"
-                                  : ""
-                              }`}
+                              className={`h-4 w-4 ${product.isLiked
+                                ? "fill-gray-900 text-gray-900"
+                                : ""
+                                }`}
                             />
                           </Button>
                         </CardContent>

@@ -18,8 +18,8 @@ import Loader from "../components/loader/loader";
 import { toast } from "sonner";
 
 const Signup = () => {
-  const context = useContext(MyContext);
-  const { loading, setLoading } = context;
+  // const context = useContext(MyContext);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
