@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,18 +12,15 @@ import Footer from "@/components/Footer";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/FirebaseConfig";
 import { toast } from "sonner";
-import { MyContext } from "../context/myContext";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false); // Local loading state
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     rememberMe: false,
   });
-
-  const context = useContext(MyContext);
-  const { loading, setLoading } = context;
 
   const navigate = useNavigate();
 
@@ -50,8 +47,7 @@ const Login = () => {
         `Welcome back, ${userCredential.user.displayName || "User"}!`
       );
 
-      // Redirect after successful login
-      navigate("/");
+      navigate("/"); // Redirect after login
     } catch (error: any) {
       console.error("Login error:", error.message);
       toast.error(error.message);
@@ -97,6 +93,7 @@ const Login = () => {
                         onChange={handleInputChange}
                         className="pl-10"
                         required
+                        autoComplete="email"
                       />
                     </div>
                   </div>
@@ -114,6 +111,7 @@ const Login = () => {
                         onChange={handleInputChange}
                         className="pl-10 pr-10"
                         required
+                        autoComplete="current-password"
                       />
                       <Button
                         type="button"
