@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   Star,
   MapPin,
@@ -17,13 +17,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MyContext } from "../context/myContext";
-
+import { collection, orderBy, where, getDocs, query, } from "firebase/firestore";
 // Dummy images
 import ribbedSweater from "@/assets/ribbed-sweater.jpg";
 import whiteShirt from "@/assets/white-shirt.jpg";
 import blackDress from "@/assets/black-dress.jpg";
 import linenBlazer from "@/assets/linen-blazer.jpg";
-
+import { fireDB } from "../firebase/FirebaseConfig";
+import PostsTab from "@/components/shraddha/MyPosts";
 const Designer: React.FC = () => {
   const { loading, currentUser, firestoreUser, isProfileComplete } = useContext(MyContext);
 
@@ -35,7 +36,7 @@ const Designer: React.FC = () => {
   if (!firestoreUser) {
     return <div className="text-center mt-20">User data not found</div>;
   }
-
+  console.log(currentUser, "current ");
 
   const { id } = useParams<{ id: string }>();
   const isOwner = currentUser?.uid === id;
@@ -88,6 +89,41 @@ const Designer: React.FC = () => {
       verified: true,
       postsCount: 23,
     };
+
+
+  const [designerPosts, setDesignerPosts] = useState<any[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      setPostsLoading(true);
+      try {
+        console.log(featuredDesigner.uid);
+        const postsRef = collection(fireDB, "Posts");
+        const q = query(
+          postsRef,
+          where("user_id", "==", featuredDesigner.uid)
+        );
+
+        const snapshot = await getDocs(q);
+        let postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        postsData = postsData
+          .sort((a, b) => b.created_at.toMillis() - a.created_at.toMillis())
+          .slice(0, 20); // show only latest 20 posts
+
+        console.log(postsData, "posts");
+        setDesignerPosts(postsData);
+      } catch (err) {
+        console.error("Error fetching posts:", err);
+      } finally {
+        setPostsLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, [featuredDesigner.uid]);
+
 
   const designerProducts = [
     {
@@ -223,7 +259,7 @@ const Designer: React.FC = () => {
                       Add Product
                     </Button>
                   </Link>
-                  <Link to="/create/post">
+                  <Link to="/create">
                     <Button className="bg-secondary text-black px-6 hover:text-white">
                       Create Post
                     </Button>
@@ -271,7 +307,7 @@ const Designer: React.FC = () => {
                   className="flex items-center gap-2 border-b-2 border-transparent data-[state=active]:border-gray-900 data-[state=active]:bg-transparent data-[state=active]:text-gray-900 rounded-none py-3 text-black/60 hover:text-gray-900 transition-colors"
                 >
                   <Play className="h-4 w-4" /> Posts (
-                  {featuredDesigner.postsCount})
+                  {designerPosts.length})
                 </TabsTrigger>
               </TabsList>
 
@@ -312,33 +348,50 @@ const Designer: React.FC = () => {
                 </div>
               </TabsContent>
 
+              <PostsTab postsLoading={loading} designerPosts={designerPosts} />
               {/* Posts Tab */}
-              <TabsContent value="posts" className="mt-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {posts.map((post) => (
-                    <Card
-                      key={post.id}
-                      className="border-black/10 shadow-none hover:shadow-lg transition-all duration-300 cursor-pointer"
-                    >
-                      <CardContent className="p-0 relative">
-                        <img
-                          src={post.thumbnail}
-                          alt={`Post ${post.id}`}
-                          className="w-full h-full object-cover aspect-[9/16]"
-                        />
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                          <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
-                            <Play className="h-6 w-6 text-gray-900 fill-current" />
-                          </div>
-                        </div>
-                        <div className="absolute bottom-2 left-2 text-black/60 text-sm font-medium bg-white/80 backdrop-blur-sm px-2 py-1 rounded">
-                          {post.views} views
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
+              {/* <TabsContent value="posts" className="mt-6">
+                {postsLoading ? (
+                  <div className="text-center text-gray-500">Loading posts...</div>
+                ) : designerPosts.length === 0 ? (
+                  <div className="text-center text-gray-500">
+                    No posts yet. Start creating to see them here!
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {designerPosts.map((post) => (
+                      <Card
+                        key={post.id}
+                        className="border-black/10 shadow-none hover:shadow-lg transition-all duration-300 cursor-pointer"
+                      >
+                        <CardContent className="p-0 relative">
+                          {post.media_urls?.[0] && (
+                            <img
+                              src={post.media_urls[0]}
+                              alt={post.caption || `Post ${post.id}`}
+                              className="w-full h-full object-cover aspect-[9/16]"
+                            />
+                          )}
+
+                          {post.media_urls?.[0]?.includes(".mp4") && (
+                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                              <div className="bg-white/20 backdrop-blur-sm rounded-full p-3">
+                                <Play className="h-6 w-6 text-gray-900 fill-current" />
+                              </div>
+                            </div>
+                          )}
+                          {post.caption && (
+                            <div className="absolute bottom-2 left-2 text-black/60 text-sm font-medium bg-white/80 backdrop-blur-sm px-2 py-1 rounded">
+                              {post.caption}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent> */}
+
             </Tabs>
           </div>
         </section>

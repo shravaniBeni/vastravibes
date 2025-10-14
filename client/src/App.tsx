@@ -20,7 +20,7 @@ import Message from "./pages/Message";
 import Designer from "./pages/Designer";
 import Thrift from "./pages/Thrift";
 import NotFound from "./pages/NotFound";
-
+import Browse from "./components/shraddha/Browse";
 // Query client for React Query
 const queryClient = new QueryClient();
 
@@ -50,7 +50,7 @@ const App = () => (
               <Route path="/designer/:id" element={<Designer />} />
               <Route path="/thrift" element={<Thrift />} />
               <Route path="/designer/:designerId" element={<Designer />} />
-
+              <Route path="/browse" element={<Browse />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

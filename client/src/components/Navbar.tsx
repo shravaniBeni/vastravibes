@@ -156,39 +156,14 @@ const Navbar = () => {
               </Button>
             </Link>
 
-            <Sheet open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-foreground h-8 w-8"
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-80">
-                <div className="flex flex-col space-y-6 mt-6">
-                  <h2 className="text-xl font-serif font-semibold">
-                    Navigation
-                  </h2>
-                  <nav className="flex flex-col space-y-4">
-                    {leftNavItems.map((item) => (
-                      <Link
-                        key={item.name}
-                        to={item.path}
-                        className={`text-lg font-medium transition-colors hover:text-primary ${isActive(item.path)
-                          ? "text-primary"
-                          : "text-muted-foreground"
-                          }`}
-                        onClick={() => setIsSearchOpen(false)}
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
-                  </nav>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-foreground h-8 w-8"
+              onClick={() => navigate("/browse")}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
 
             {/* Profile / User */}
             {currentUser ? (
