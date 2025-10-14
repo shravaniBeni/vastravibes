@@ -7,7 +7,8 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  image: string;
+  images?: string[]; // Firestore has array
+  image?: string; // fallback for static products
   category?: string;
   originalPrice?: number;
   isNew?: boolean;
@@ -19,11 +20,15 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
     }).format(price);
   };
+
+  // Determine the image to show
+  const displayImage =
+    product.images?.[0] || product.image || "/placeholder.svg";
 
   return (
     <Card className="group border-0 shadow-none bg-transparent overflow-hidden">
@@ -32,12 +37,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <div className="relative aspect-[3/4] overflow-hidden bg-gray-50 rounded-lg mb-4">
           <Link to={`/product/${product.id}`}>
             <img
-              src={product.image}
+              src={displayImage || "/placeholder.svg"}
               alt={product.name}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           </Link>
-          
+
           {/* Badges */}
           <div className="absolute top-3 left-3">
             {product.isNew && (
@@ -49,10 +54,18 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
           {/* Action Buttons */}
           <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-md">
+            <Button
+              size="icon"
+              variant="secondary"
+              className="h-8 w-8 rounded-full shadow-md"
+            >
               <Heart className="h-4 w-4" />
             </Button>
-            <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-md">
+            <Button
+              size="icon"
+              variant="secondary"
+              className="h-8 w-8 rounded-full shadow-md"
+            >
               <ShoppingBag className="h-4 w-4" />
             </Button>
           </div>
@@ -72,13 +85,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
               {product.category}
             </p>
           )}
-          
+
           <Link to={`/product/${product.id}`}>
             <h3 className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2">
               {product.name}
             </h3>
           </Link>
-          
+
           <div className="flex items-center gap-2">
             <span className="font-semibold text-foreground">
               {formatPrice(product.price)}

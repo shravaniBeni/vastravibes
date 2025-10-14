@@ -10,7 +10,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { fireDB } from "../firebase/FirebaseConfig" // make sure you have your firestore instance exported as db
-import MaxWords from "@/components/shraddha/maxWords";
+import MaxWords from "@/components/shraddha/MaxWords";
 import { likePost } from "@/helpers/postHandler";
 export default function Reels() {
   const [reels, setReels] = useState([]);
