@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Heart, X, Search } from "lucide-react";
+import { Heart, X, Search, MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
@@ -151,14 +151,14 @@ export default function Browse() {
                                     navigate(`/designer/${selectedPost.user_id}`)
                                 }} className="flex items-center gap-3">
                                     <Avatar>
-                                        <AvatarImage src={selectedPost.user_avatar || ""} />
+                                        <AvatarImage src={selectedPost.avatar || ""} />
                                         <AvatarFallback>
-                                            {selectedPost.user_name?.[0] || "S"}
+                                            {selectedPost.name?.[0] || "S"}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>
                                         <p className="font-semibold text-gray-900">
-                                            {selectedPost.user_name || "User"}
+                                            {selectedPost.name || "User"}
                                         </p>
                                         <p className="text-xs text-gray-500">
                                             {new Date(
@@ -207,6 +207,14 @@ export default function Browse() {
                                             On Sale
                                         </span>
                                     )}
+
+                                    {/* Message Icon */}
+                                    <MessageCircle
+                                        className="ml-2 h-5 w-5 text-blue-500 cursor-pointer hover:scale-110 transition"
+                                        onClick={() =>
+                                            navigate(`/message?user=${selectedPost.user_id}&post=${selectedPost.id}`)
+                                        }
+                                    />
                                 </div>
                             </div>
                         </div>
