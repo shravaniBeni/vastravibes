@@ -28,7 +28,7 @@ import ribbedSweater from "@/assets/ribbed-sweater.jpg";
 import whiteShirt from "@/assets/white-shirt.jpg";
 import blackDress from "@/assets/black-dress.jpg";
 import linenBlazer from "@/assets/linen-blazer.jpg";
-
+import { toggleFollow } from "@/helpers/followers";
 const Designer: React.FC = () => {
   const { loading, currentUser, firestoreUser, isProfileComplete } = useContext(MyContext);
 
@@ -42,11 +42,19 @@ const Designer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   console.log(id)
   const isOwner = currentUser?.uid === id;
+  // isOwner ? alert("owner") : "other";
+  const handleFollowToggle = async (currentUserId, profileUserId) => {
+    try {
+      // Call the toggleFollow function with proper IDs
+      await toggleFollow(currentUserId, profileUserId); // replace with actual IDs
 
-  const handleFollowToggle = () => {
-    setIsFollowing((prev) => !prev);
-    // TODO: update follow status in Firebase
+      // Update local state after successful Firebase update
+      setIsFollowing((prev) => !prev);
+    } catch (error) {
+      console.error("Failed to toggle follow:", error);
+    }
   };
+
 
   const handleDelete = async (productId: string) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this product?");
@@ -94,7 +102,24 @@ const Designer: React.FC = () => {
         // Not owner: fetch user by id
         try {
           const userData = await fetchUserByUid(id);
-          setFeaturedDesigner(userData);
+          console.log(userData);
+          setFeaturedDesigner({
+            uid: userData?.uid || id,
+            name: `${userData?.firstName || ""} ${userData?.lastName || ""}`.trim() || "Unnamed",
+            username: `@${userData?.username || "unknown"}`,
+            specialty: userData?.specialty || "Not specified",
+            location: userData?.location || "Unknown",
+            rating: userData?.rating || 5.0,
+            reviews: userData?.reviews || 0,
+            products: userData?.products || 0,
+            followers: userData?.followers || 0,
+            following: userData?.following || 0,
+            joinDate: userData?.joinDate || "Recently Joined",
+            description: userData?.description || "No description yet.",
+            avatar: userData?.avatar || "/placeholder.svg",
+            verified: userData?.verified || false,
+            postsCount: userData?.postsCount || 0,
+          });
         } catch (error) {
           console.error("Error fetching user:", error);
           setFeaturedDesigner(null);
@@ -105,25 +130,33 @@ const Designer: React.FC = () => {
     setDesigner();
   }, [id, isOwner, currentUser, firestoreUser]);
 
-
+  console.log(isOwner);
   // FETCH PRODUCTS
   useEffect(() => {
     const fetchProducts = async () => {
-      if (!id) return;
-      setLoadingProducts(true);
       try {
-        const q = query(collection(fireDB, "products"), where("ownerId", "==", id));
+        setLoadingProducts(true);
+        const q = query(
+          collection(fireDB, "products"),
+          where("ownerId", "==", id)
+        );
         const querySnapshot = await getDocs(q);
-        const fetched = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const fetched = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setProducts(fetched);
+        console.log("fetched", fetched);
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
         setLoadingProducts(false);
       }
     };
-    fetchProducts();
+
+    if (id) fetchProducts();
   }, [id]);
+
 
   // FETCH POSTS
   useEffect(() => {
@@ -170,100 +203,110 @@ const Designer: React.FC = () => {
       ) : (
         <main className="min-h-screen bg-white">
           {/* Designer Profile Header */}
+          {/* Designer Profile Header */}
           <section className="bg-white py-8 border-b border-black/10">
             <div className="container mx-auto max-w-4xl px-4 text-center">
-              {/* Avatar */}
-              <div className="relative mb-6 inline-block">
-                <Avatar className="h-32 w-32 border-4 border-black/10 shadow-lg">
-                  <AvatarImage src={featuredDesigner.avatar} />
-                  <AvatarFallback className="text-2xl bg-gray-100 text-gray-900">
-                    {featuredDesigner.name}
-                  </AvatarFallback>
-                </Avatar>
-                {featuredDesigner.verified && (
-                  <div className="absolute -bottom-1 -right-1 bg-black rounded-full p-1">
-                    <Star className="h-3 w-3 text-white fill-current" />
+              {featuredDesigner ? (
+                <>
+                  {/* Avatar */}
+                  <div className="relative mb-6 inline-block">
+                    <Avatar className="h-32 w-32 border-4 border-black/10 shadow-lg">
+                      <AvatarImage src={featuredDesigner.avatar || "/placeholder.svg"} />
+                      <AvatarFallback className="text-2xl bg-gray-100 text-gray-900">
+                        {featuredDesigner.name ? featuredDesigner.name[0] : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    {featuredDesigner.verified && (
+                      <div className="absolute -bottom-1 -right-1 bg-black rounded-full p-1">
+                        <Star className="h-3 w-3 text-white fill-current" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              {/* Profile Info */}
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">{featuredDesigner.name}</h1>
-              <p className="text-black/60 mb-2">{featuredDesigner?.username}</p>
-              <p className="text-gray-900 font-medium text-sm">{featuredDesigner.specialty}</p>
+                  {/* Profile Info */}
+                  <h1 className="text-2xl font-bold text-gray-900 mb-1">{featuredDesigner.name || "Unnamed"}</h1>
+                  <p className="text-black/60 mb-2">{featuredDesigner.username || "@unknown"}</p>
+                  <p className="text-gray-900 font-medium text-sm">{featuredDesigner.specialty || "No Specialty"}</p>
 
-              {/* Stats */}
-              <div className="flex justify-center gap-8 mb-6 mt-4 text-center">
-                <div>
-                  <div className="text-xl font-bold text-gray-900">{products.length}</div>
-                  <div className="text-sm text-black/60">Products</div>
-                </div>
-                <div>
-                  <div className="text-xl font-bold text-gray-900">
-                    {featuredDesigner.followers?.toLocaleString() || 1}
+                  {/* Stats */}
+                  <div className="flex justify-center gap-8 mb-6 mt-4 text-center">
+                    <div>
+                      <div className="text-xl font-bold text-gray-900">{products.length}</div>
+                      <div className="text-sm text-black/60">Products</div>
+                    </div>
+                    <div>
+                      <div className="text-xl font-bold text-gray-900">
+                        {featuredDesigner.followers?.toLocaleString() || 0}
+                      </div>
+                      <div className="text-sm text-black/60">Followers</div>
+                    </div>
+                    <div>
+                      <div className="text-xl font-bold text-gray-900">{featuredDesigner.following || 0}</div>
+                      <div className="text-sm text-black/60">Following</div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-gray-900 text-gray-900" />
+                      <div className="text-xl font-bold text-gray-900">{featuredDesigner.rating || 0}</div>
+                      <div className="text-sm text-black/60 ml-1">{featuredDesigner.reviews || 0} reviews</div>
+                    </div>
                   </div>
-                  <div className="text-sm text-black/60">Followers</div>
-                </div>
-                <div>
-                  <div className="text-xl font-bold text-gray-900">{featuredDesigner.following || 2}</div>
-                  <div className="text-sm text-black/60">Following</div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-gray-900 text-gray-900" />
-                  <div className="text-xl font-bold text-gray-900">{featuredDesigner.rating}</div>
-                  <div className="text-sm text-black/60 ml-1">{featuredDesigner.reviews} reviews</div>
-                </div>
-              </div>
 
-              {/* Description */}
-              <p className="text-black/60 text-sm leading-relaxed max-w-2xl mx-auto mb-6">
-                {featuredDesigner.description}
-              </p>
+                  {/* Description */}
+                  <p className="text-black/60 text-sm leading-relaxed max-w-2xl mx-auto mb-6">
+                    {featuredDesigner.description || "No description provided."}
+                  </p>
 
-              {/* Location & Join */}
-              <div className="flex justify-center gap-6 mb-6 text-sm text-black/60">
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  {featuredDesigner.location}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  Joined {featuredDesigner.joinDate}
-                </div>
-              </div>
+                  {/* Location & Join */}
+                  <div className="flex justify-center gap-6 mb-6 text-sm text-black/60">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      {featuredDesigner.location || "Unknown"}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      Joined {featuredDesigner.joinDate || "Recently"}
+                    </div>
+                  </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-center gap-3">
-                {isOwner ? (
-                  <>
-                    <Link to="/create-product">
-                      <Button className="bg-primary text-white px-6">Add Product</Button>
-                    </Link>
-                    <Link to="/create">
-                      <Button className="bg-secondary text-black px-6 hover:text-white">Create Post</Button>
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      className={`px-6 ${isFollowing ? "bg-gray-200 text-gray-900" : "bg-primary text-white"}`}
-                      onClick={handleFollowToggle}
-                    >
-                      {isFollowing ? "Following" : "Follow"}
-                    </Button>
-                    <Link to={`/message/${featuredDesigner.uid}`}>
-                      <Button variant="outline" className="px-4">
-                        Message
-                      </Button>
-                    </Link>
-                    <Button variant="outline" size="icon">
-                      <Share2 className="h-4 w-4" />
-                    </Button>
-                  </>
-                )}
-              </div>
+                  {/* Action Buttons */}
+                  <div className="flex justify-center gap-3">
+                    {isOwner ? (
+                      <>
+                        <Link to="/create-product">
+                          <Button className="bg-primary text-white px-6">Add Product</Button>
+                        </Link>
+                        <Link to="/create">
+                          <Button className="bg-secondary text-black px-6 hover:text-white">Create Post</Button>
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          className={`px-6 ${isFollowing ? "bg-gray-200 text-gray-900" : "bg-primary text-white"}`}
+                          onClick={() => {
+                            handleFollowToggle(currentUser.uid, id);
+                          }}
+                        >
+                          {isFollowing ? "Following" : "Follow"}
+                        </Button>
+                        <Link to={`/message/${featuredDesigner.uid}`}>
+                          <Button variant="outline" className="px-4">
+                            Message
+                          </Button>
+                        </Link>
+                        <Button variant="outline" size="icon">
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center mt-20">Loading designer info...</div>
+              )}
             </div>
           </section>
+
 
           {/* Tabs */}
           <section className="container mx-auto max-w-4xl px-4 py-8">
@@ -291,21 +334,33 @@ const Designer: React.FC = () => {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {products.map((product) => (
-                      <Card key={product.id} className="shadow-sm">
+                      <Card key={product.id} className="shadow-sm relative">
                         <CardContent className="p-2">
-                          <img src={product.image || ribbedSweater} alt={product.name} className="w-full h-40 object-cover rounded-md mb-2" />
-                          <div className="flex justify-between items-center">
-                            <div className="font-semibold">{product.name}</div>
-                            {isOwner && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(product.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
+                          <img
+                            src={product.images?.[0] || "/placeholder.svg"}
+                            alt={product.name || "Product"}
+                            className="w-full h-64 object-cover rounded-t-lg"
+                          />
+                          <div className="p-3">
+                            <h3 className="font-semibold">
+                              {product.name || "Unnamed Product"}
+                            </h3>
+                            <p className="text-gray-500 text-sm">
+                              ₹{product.price ?? "N/A"}
+                            </p>
                           </div>
+
+                          {isOwner && (
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-2 right-2"
+                              onClick={() => handleDelete(product.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+
                         </CardContent>
                       </Card>
                     ))}
