@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useRef, useState, useContext, useEffect } from "react";
 import {
   Star,
   MapPin,
@@ -8,7 +8,9 @@ import {
   Calendar,
   Play,
   Grid3X3,
+  FolderClosed,
 } from "lucide-react";
+import { checkIfFollowing } from "@/helpers/followers";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MyContext } from "../context/myContext";
-import { collection, getDocs, query, where, deleteDoc, doc } from "firebase/firestore";
+import { collection, updateDoc, getDocs, query, where, deleteDoc, doc } from "firebase/firestore";
 import { toast } from "@/components/ui/use-toast";
 import { fireDB } from "../firebase/FirebaseConfig";
 import PostsTab from "@/components/shraddha/MyPosts";
@@ -29,6 +31,11 @@ import whiteShirt from "@/assets/white-shirt.jpg";
 import blackDress from "@/assets/black-dress.jpg";
 import linenBlazer from "@/assets/linen-blazer.jpg";
 import { toggleFollow } from "@/helpers/followers";
+import { uploadFile } from "@/helpers/upload";
+
+
+
+
 const Designer: React.FC = () => {
   const { loading, currentUser, firestoreUser, isProfileComplete } = useContext(MyContext);
 
@@ -49,12 +56,17 @@ const Designer: React.FC = () => {
       await toggleFollow(currentUserId, profileUserId); // replace with actual IDs
 
       // Update local state after successful Firebase update
-      setIsFollowing((prev) => !prev);
+      window.location.reload();
     } catch (error) {
       console.error("Failed to toggle follow:", error);
     }
   };
+  const updateProfileAvatar = async (avatarUrl: string) => {
+    if (!currentUser || !isOwner) return;
 
+    const userDocRef = doc(fireDB, "users", currentUser.uid);
+    await updateDoc(userDocRef, { avatar: avatarUrl });
+  };
 
   const handleDelete = async (productId: string) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this product?");
@@ -90,8 +102,8 @@ const Designer: React.FC = () => {
           rating: firestoreUser?.rating || 5.0,
           reviews: firestoreUser?.reviews || 0,
           products: firestoreUser?.products || 0,
-          followers: firestoreUser?.followers || 0,
-          following: firestoreUser?.following || 0,
+          followers: firestoreUser?.followers_count || 0,
+          following: firestoreUser?.following_count || 0,
           joinDate: firestoreUser?.joinDate || "Recently Joined",
           description: firestoreUser?.description || "Welcome to your profile! Start adding products and posts.",
           avatar: firestoreUser?.avatar || "/placeholder.svg",
@@ -185,13 +197,29 @@ const Designer: React.FC = () => {
     fetchPosts();
   }, [featuredDesigner]); // ✅ dependency is the object, not featuredDesigner.uid
 
+  useEffect(() => {
+    const fetchFollowStatus = async () => {
+      if (!id || !currentUser?.uid || isOwner) return;
+
+      try {
+        const following = await checkIfFollowing(currentUser.uid, id);
+        console.log(following);
+        setIsFollowing(following);
+
+      } catch (error) {
+        console.error("Error fetching follow status:", error);
+      }
+    };
+
+    fetchFollowStatus();
+  }, [id, currentUser, isOwner]);
 
   const posts = [
     { id: 1, thumbnail: ribbedSweater, views: "12K" },
     { id: 2, thumbnail: whiteShirt, views: "8.5K" },
     { id: 3, thumbnail: blackDress, views: "15K" },
   ];
-
+  const fileInputRef = useRef<HTMLInputElement>(null);
   return (
     <>
       <Navbar />
@@ -210,18 +238,63 @@ const Designer: React.FC = () => {
                 <>
                   {/* Avatar */}
                   <div className="relative mb-6 inline-block">
-                    <Avatar className="h-32 w-32 border-4 border-black/10 shadow-lg">
+                    <Avatar
+                      className={`h-32 w-32 border-4 border-black/10 shadow-lg ${isOwner ? "cursor-pointer" : ""}`}
+                      onClick={() => isOwner && fileInputRef.current?.click()}
+                    >
                       <AvatarImage src={featuredDesigner.avatar || "/placeholder.svg"} />
                       <AvatarFallback className="text-2xl bg-gray-100 text-gray-900">
                         {featuredDesigner.name ? featuredDesigner.name[0] : "U"}
                       </AvatarFallback>
                     </Avatar>
+
                     {featuredDesigner.verified && (
                       <div className="absolute -bottom-1 -right-1 bg-black rounded-full p-1">
                         <Star className="h-3 w-3 text-white fill-current" />
                       </div>
                     )}
+
+                    {/* Camera overlay for owner */}
+                    {isOwner && (
+                      <div
+                        className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-70 bg-black/30 rounded-full transition cursor-pointer"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Star className="h-6 w-6 text-white" /> {/* Replace Star with camera icon if you want */}
+                      </div>
+                    )}
+
+                    {/* Hidden file input */}
+                    {isOwner && (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        ref={fileInputRef}
+                        onChange={async (e) => {
+                          if (!e.target.files || !e.target.files[0]) return;
+
+                          const file = e.target.files[0];
+
+                          try {
+                            const url = await uploadFile(file); // your Cloudinary function
+                            if (!url) return;
+
+                            // Update local state immediately
+                            setFeaturedDesigner((prev) => prev ? { ...prev, avatar: url } : prev);
+
+                            // Update Firestore
+                            await updateProfileAvatar(url);
+                          } catch (err) {
+                            console.error("Failed to update profile avatar:", err);
+                          }
+                        }}
+                      />
+
+                    )}
                   </div>
+
+
 
                   {/* Profile Info */}
                   <h1 className="text-2xl font-bold text-gray-900 mb-1">{featuredDesigner.name || "Unnamed"}</h1>
@@ -285,6 +358,12 @@ const Designer: React.FC = () => {
                           className={`px-6 ${isFollowing ? "bg-gray-200 text-gray-900" : "bg-primary text-white"}`}
                           onClick={() => {
                             handleFollowToggle(currentUser.uid, id);
+                            toast({
+                              title: isFollowing ? "Unfollowed" : "Followed",
+                              description: isFollowing
+                                ? `You unfollowed ${featuredDesigner?.name || "this designer"}`
+                                : `You started following ${featuredDesigner?.name || "this designer"}`,
+                            });
                           }}
                         >
                           {isFollowing ? "Following" : "Follow"}
@@ -368,11 +447,13 @@ const Designer: React.FC = () => {
                 )}
               </TabsContent>
             </Tabs>
+
           </section>
         </main>
       )}
 
       <Footer />
+
     </>
   );
 };

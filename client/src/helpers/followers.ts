@@ -8,9 +8,29 @@ import {
     serverTimestamp,
     updateDoc,
     increment,
-    deleteDoc
+    deleteDoc,
+    getDoc
 } from "firebase/firestore";
 import { fireDB } from "@/firebase/FirebaseConfig";
+
+export const checkIfFollowing = async (currentUserId: string, profileUserId: string) => {
+    if (!currentUserId || !profileUserId) return false;
+
+    try {
+        const followersRef = collection(fireDB, "followers");
+        const q = query(
+            followersRef,
+            where("follower_id", "==", currentUserId),
+            where("following_id", "==", profileUserId)
+        );
+
+        const querySnapshot = await getDocs(q);
+        return !querySnapshot.empty;
+    } catch (error) {
+        console.error("Error checking follow status:", error);
+        return false;
+    }
+};
 
 export const toggleFollow = async (followerId: string, followingId: string) => {
     if (followerId === followingId) {

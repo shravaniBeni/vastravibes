@@ -1,25 +1,22 @@
-import { useState, useContext } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Search, ShoppingBag, Play, Heart, User } from "lucide-react";
+import { useState, useContext, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Search, ShoppingBag, Play, Heart, User, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MyContext } from "../context/myContext";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase/FirebaseConfig";
-import { useEffect } from "react";
 import ProfileModal from "./ProfileSetupModal";
-import { useNavigate } from "react-router-dom";
+
 const Navbar = () => {
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const location = useLocation();
-  const { loading, firestoreUser, isProfileComplete, currentUser } =
-    useContext(MyContext);
+  const { loading, firestoreUser, isProfileComplete, currentUser } = useContext(MyContext);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
-    // Only show modal if user exists AND profile is incomplete
     if (firestoreUser && !isProfileComplete) {
       setShowProfileModal(true);
     }
@@ -44,18 +41,11 @@ const Navbar = () => {
     { name: "Thrift", path: "/thrift" },
   ];
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-  };
-  // console.log("currentUser:", currentUser);
+  const getInitials = (name: string) => name.split(" ").map((n) => n[0]).join("").toUpperCase();
 
   const handleLogout = async () => {
     await signOut(auth);
-    navigate("/login")
+    navigate("/login");
     setDropdownOpen(false);
   };
 
@@ -142,6 +132,13 @@ const Navbar = () => {
                 </span>
               </Button>
             </Link>
+
+            {/* Chat Icon */}
+            <Link to="/message">
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MessageCircle className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
 
           {/* Desktop Icons */}
@@ -164,6 +161,17 @@ const Navbar = () => {
             >
               <Search className="h-4 w-4" />
             </Button>
+
+            {/* Chat Icon */}
+            <Link to="/message">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-foreground h-8 w-8"
+              >
+                <MessageCircle className="h-4 w-4" />
+              </Button>
+            </Link>
 
             {/* Profile / User */}
             {currentUser ? (

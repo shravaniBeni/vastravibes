@@ -12,10 +12,11 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { fireDB } from "../firebase/FirebaseConfig" // make sure you have your firestore instance exported as db
 import MaxWords from "@/components/shraddha/MaxWords";
 import { likePost } from "@/helpers/postHandler";
+import { useNavigate } from "react-router-dom";
 export default function Reels() {
   const [reels, setReels] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchVideoPosts = async () => {
       try {
@@ -95,15 +96,17 @@ export default function Reels() {
 
                       {/* Bottom Info */}
                       <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div onClick={() => {
+                          navigate(`/designer/${reel.user_id}`)
+                        }} className="flex items-center gap-2 mb-2">
                           <Avatar className="h-6 w-6">
                             <AvatarImage src="/placeholder.svg" />
                             <AvatarFallback>
-                              {reel.user_id?.[0]?.toUpperCase() || "U"}
+                              {reel.name?.[0]?.toUpperCase() || "U"}
                             </AvatarFallback>
                           </Avatar>
                           <span className="text-white text-sm font-medium">
-                            {reel.creator || "Unknown User"}
+                            {reel.name || "Unknown User"}
                           </span>
                         </div>
                         <h3 className="text-white font-semibold text-sm mb-3">

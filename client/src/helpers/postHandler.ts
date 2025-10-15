@@ -90,7 +90,8 @@ export const handleCreatePost = async ({
         const postData = {
             user_id: currentUser.uid,
             avatar: firestoreUser.avatar,
-            name: firestoreUser.firstName,
+            name: `${firestoreUser?.firstName || ""} ${firestoreUser?.lastName || ""}`.trim() || "Unnamed",
+            username: firestoreUser.username,
             caption,
             description,
             is_product: isProduct,
@@ -103,6 +104,7 @@ export const handleCreatePost = async ({
             created_at: serverTimestamp(),
         };
 
+        console.log(postData);
         // Save post data to Firestore
         const postsRef = collection(fireDB, "Posts");
         await addDoc(postsRef, postData);
