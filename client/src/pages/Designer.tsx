@@ -468,34 +468,39 @@ const Designer: React.FC = () => {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {products.map((product) => (
-                      <Card key={product.id} className="shadow-sm relative">
-                        <CardContent className="p-2">
-                          <img
-                            src={product.images?.[0] || "/placeholder.svg"}
-                            alt={product.name || "Product"}
-                            className="w-full h-64 object-cover rounded-t-lg"
-                          />
-                          <div className="p-3">
-                            <h3 className="font-semibold">
-                              {product.name || "Unnamed Product"}
-                            </h3>
-                            <p className="text-gray-500 text-sm">
-                              ₹{product.price ?? "N/A"}
-                            </p>
-                          </div>
+                      <Link to={`/product/${product.id}`} key={product.id}>
+                        <Card className="shadow-sm relative hover:shadow-md transition cursor-pointer">
+                          <CardContent className="p-2">
+                            <img
+                              src={product.images?.[0] || "/placeholder.svg"}
+                              alt={product.name || "Product"}
+                              className="w-full h-64 object-cover rounded-t-lg"
+                            />
+                            <div className="p-3">
+                              <h3 className="font-semibold">
+                                {product.name || "Unnamed Product"}
+                              </h3>
+                              <p className="text-gray-500 text-sm">
+                                ₹{product.price ?? "N/A"}
+                              </p>
+                            </div>
 
-                          {isOwner && (
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2"
-                              onClick={() => handleDelete(product.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </CardContent>
-                      </Card>
+                            {isOwner && (
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-2 right-2"
+                                onClick={(e) => {
+                                  e.preventDefault(); // prevent Link navigation when deleting
+                                  handleDelete(product.id);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </Link>
                     ))}
                   </div>
                 )}
