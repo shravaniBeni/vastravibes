@@ -55,16 +55,16 @@ const Index = () => {
       subtitle:
         "Exclusive pieces from emerging and established designers worldwide.",
       cta: "VIEW DESIGNERS",
-      link: "/designer",
+      link: "/shop",
     },
-    {
-      id: 4,
-      image: summerHero,
-      title: "Summer Essentials",
-      subtitle: "Fresh styles perfect for the season ahead.",
-      cta: "SHOP SUMMER",
-      link: "/shop?collection=summer",
-    },
+    // {
+    //   id: 4,
+    //   image: summerHero,
+    //   title: "Summer Essentials",
+    //   subtitle: "Fresh styles perfect for the season ahead.",
+    //   cta: "SHOP SUMMER",
+    //   link: "/shop?collection=summer",
+    // },
   ];
 
   const featuredProducts = [
@@ -458,8 +458,18 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
               {/* New Arrivals */}
               <Card className="relative overflow-hidden group border-0 shadow-lg">
-                <div className="aspect-[4/5] bg-gray-200">
+                <div className="aspect-[4/5] bg-gray-200 relative">
+                  {/* Background Image */}
+                  <img
+                    src="https://littleboxindia.com/cdn/shop/products/Matching_Set_of_Vest_Coat_and_Trousers_in_Cappucino_720x.jpg?v=1743055804" // replace with your image path
+                    alt="New Arrivals"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+
+                  {/* Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
+
+                  {/* Text Content */}
                   <div className="absolute bottom-8 left-8 z-20">
                     <h3 className="text-3xl font-serif font-semibold text-white mb-2">
                       New Arrivals
@@ -481,8 +491,18 @@ const Index = () => {
 
               {/* Accessories */}
               <Card className="relative overflow-hidden group border-0 shadow-lg">
-                <div className="aspect-[4/5] bg-gray-300">
+                <div className="aspect-[4/5] bg-gray-300 relative">
+                  {/* Background Image */}
+                  <img
+                    src="https://i.pinimg.com/736x/49/b4/e4/49b4e4949262a71f3b03f0f4d6f8d2a6.jpg" // replace with your actual image path
+                    alt="Accessories"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+
+                  {/* Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
+
+                  {/* Text Content */}
                   <div className="absolute bottom-8 left-8 z-20">
                     <h3 className="text-3xl font-serif font-semibold text-white mb-2">
                       Accessories
