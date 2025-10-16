@@ -290,7 +290,12 @@ const ProductDetail = () => {
             <Button
               size="lg"
               className="w-full bg-primary text-primary-foreground"
-              onClick={() => navigate("/tryon")}
+              onClick={() =>
+                window.open(
+                  "https://app.klingai.com/global/try-on/try-on/new",
+                  "_blank"
+                )
+              }
             >
               <Sparkles className="h-4 w-4 mr-2" />
               Try On This Product
