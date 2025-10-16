@@ -1,6 +1,13 @@
 import { useState, useContext, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Search, ShoppingBag, Play, Heart, User, MessageCircle } from "lucide-react";
+import {
+  Search,
+  ShoppingBag,
+  Play,
+  Heart,
+  User,
+  MessageCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MyContext } from "../context/myContext";
@@ -9,11 +16,14 @@ import { auth } from "../firebase/FirebaseConfig";
 import ProfileModal from "./ProfileSetupModal";
 
 const Navbar = () => {
+  const { cartItems } = useContext(MyContext);
+  const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const location = useLocation();
-  const { loading, firestoreUser, isProfileComplete, currentUser } = useContext(MyContext);
+  const { loading, firestoreUser, isProfileComplete, currentUser } =
+    useContext(MyContext);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
@@ -41,7 +51,12 @@ const Navbar = () => {
     { name: "Thrift", path: "/thrift" },
   ];
 
-  const getInitials = (name: string) => name.split(" ").map((n) => n[0]).join("").toUpperCase();
+  const getInitials = (name: string) =>
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -66,10 +81,11 @@ const Navbar = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`text-sm font-medium transition-colors hover:text-primary ${isActive(item.path)
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground"
-                  }`}
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  isActive(item.path)
+                    ? "text-primary border-b-2 border-primary"
+                    : "text-muted-foreground"
+                }`}
               >
                 {item.name}
               </Link>
@@ -82,7 +98,7 @@ const Navbar = () => {
               to="/"
               className="text-2xl font-serif font-semibold text-foreground hover:text-gray-600 transition-colors"
             >
-              VastraVibes
+              VastraVibez
             </Link>
           </div>
 
@@ -97,17 +113,18 @@ const Navbar = () => {
               <SheetContent side="left" className="w-80">
                 <div className="flex flex-col space-y-6 mt-6">
                   <Link to="/" className="text-xl font-serif font-semibold">
-                    VastraVibes
+                    VastraVibez
                   </Link>
                   <nav className="flex flex-col space-y-4">
                     {leftNavItems.map((item) => (
                       <Link
                         key={item.name}
                         to={item.path}
-                        className={`text-lg font-medium transition-colors hover:text-primary ${isActive(item.path)
-                          ? "text-primary"
-                          : "text-muted-foreground"
-                          }`}
+                        className={`text-lg font-medium transition-colors hover:text-primary ${
+                          isActive(item.path)
+                            ? "text-primary"
+                            : "text-muted-foreground"
+                        }`}
                         onClick={() => setIsSearchOpen(false)}
                       >
                         {item.name}
@@ -222,7 +239,7 @@ const Navbar = () => {
               >
                 <ShoppingBag className="h-4 w-4" />
                 <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
-                  0
+                  {totalQuantity}
                 </span>
               </Button>
             </Link>

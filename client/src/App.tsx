@@ -21,6 +21,7 @@ import Designer from "./pages/Designer";
 import Thrift from "./pages/Thrift";
 import NotFound from "./pages/NotFound";
 import Browse from "./components/shraddha/Browse";
+import OwnerOrders from "./pages/OwnersOrders";
 import AddProduct from "./pages/CreateProduct";
 // Query client for React Query
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ const App = () => (
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
+               <Route path="/myorders" element={<OwnerOrders />} />
             </Routes>
           </div>
           <BottomNav />

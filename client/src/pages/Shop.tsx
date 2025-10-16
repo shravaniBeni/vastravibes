@@ -37,6 +37,22 @@ const Shop = () => {
     priceRange: [0, 500],
   });
   const [products, setProducts] = useState<any[]>([]);
+
+  // Update state for filters
+  const handleCheckboxChange = (
+    type: "categories" | "sizes" | "colors",
+    value: string
+  ) => {
+    setFilters((prev) => {
+      const current = prev[type];
+      if (current.includes(value)) {
+        return { ...prev, [type]: current.filter((v) => v !== value) };
+      } else {
+        return { ...prev, [type]: [...current, value] };
+      }
+    });
+  };
+
   // Sample products - in a real app, this would come from an API
   // Fetch products from Firestore
   useEffect(() => {
@@ -107,8 +123,8 @@ const Shop = () => {
             className="mb-4"
           />
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>${filters.priceRange[0]}</span>
-            <span>${filters.priceRange[1]}</span>
+            <span>₹{filters.priceRange[0]}</span>
+            <span>₹{filters.priceRange[1]}</span>
           </div>
         </div>
       </div>

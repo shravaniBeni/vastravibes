@@ -1,3 +1,4 @@
+import { useContext, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Minus, Plus, X, ShoppingBag, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,52 +6,77 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useCart } from "@/contexts/CartContext";
-
-// Import product images for demo
-import ribbedSweater from "@/assets/ribbed-sweater.jpg";
-import whiteShirt from "@/assets/white-shirt.jpg";
+import { MyContext } from "../context/myContext";
+import {
+  doc,
+  updateDoc,
+  deleteDoc,
+  collection,
+  onSnapshot,
+} from "firebase/firestore";
+import { fireDB, auth } from "../firebase/FirebaseConfig";
 
 const Cart = () => {
-  const { state, updateQuantity, removeItem } = useCart();
+  const { currentUser } = useContext(MyContext);
+  const [cartItems, setCartItems] = useState<any[]>([]);
 
-  // Demo cart items if cart is empty
-  const demoItems = state.items.length === 0 ? [
-    {
-      id: "1",
-      name: "Ribbed Cotton Sweater",
-      price: 89,
-      image: ribbedSweater,
-      quantity: 1,
-      size: "M",
-      color: "Cream",
-    },
-    {
-      id: "2",
-      name: "Classic White Button Shirt",
-      price: 125,
-      image: whiteShirt,
-      quantity: 2,
-      size: "L",
-      color: "White",
-    },
-  ] : state.items;
+  useEffect(() => {
+    if (!currentUser) return;
 
-  const demoTotal = demoItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const demoItemCount = demoItems.reduce((sum, item) => sum + item.quantity, 0);
+    const cartRef = collection(fireDB, "users", currentUser.uid, "cart");
+    const unsubscribe = onSnapshot(cartRef, (snapshot) => {
+      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setCartItems(items);
+    });
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
+    return () => unsubscribe();
+  }, [currentUser]);
+
+  const updateQuantity = async (itemId: string, newQty: number) => {
+    if (!currentUser) return;
+    if (newQty < 1) return removeItem(itemId); // auto-remove if quantity < 1
+
+    const itemRef = doc(fireDB, "users", currentUser.uid, "cart", itemId);
+    await updateDoc(itemRef, { quantity: newQty });
   };
 
-  const shipping = demoTotal > 100 ? 0 : 15;
-  const tax = demoTotal * 0.08; // 8% tax
-  const finalTotal = demoTotal + shipping + tax;
+  const removeItem = async (itemId: string) => {
+    if (!currentUser) return;
 
-  if (demoItems.length === 0) {
+    const itemRef = doc(fireDB, "users", currentUser.uid, "cart", itemId);
+    await deleteDoc(itemRef);
+  };
+
+  const proceedToCheckout = async () => {
+    if (!currentUser) return;
+
+    // For demo, we just clear the cart
+    const cartRef = collection(fireDB, "users", currentUser.uid, "cart");
+    cartItems.forEach(async (item) => {
+      const itemRef = doc(cartRef, item.id);
+      await deleteDoc(itemRef);
+    });
+
+    alert("Checkout successful!");
+  };
+
+  const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const shipping = subtotal > 100 ? 0 : 15;
+  const tax = subtotal * 0.08;
+  const finalTotal = subtotal + shipping + tax;
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0, // Optional: removes decimals
+    }).format(price);
+
+  if (cartItems.length === 0) {
     return (
       <>
         <Navbar />
@@ -81,7 +107,6 @@ const Cart = () => {
   return (
     <>
       <Navbar />
-      
       <div className="min-h-screen bg-background">
         <div className="container-custom py-8">
           <div className="mb-8">
@@ -89,18 +114,17 @@ const Cart = () => {
               Shopping Cart
             </h1>
             <p className="text-muted-foreground">
-              {demoItemCount} {demoItemCount === 1 ? 'item' : 'items'} in your cart
+              {totalQuantity} {totalQuantity === 1 ? "item" : "items"} in your
+              cart
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">
-              {demoItems.map((item) => (
-                <Card key={`${item.id}-${item.size}-${item.color}`} className="border-0 shadow-sm">
+              {cartItems.map((item) => (
+                <Card key={item.id} className="border-0 shadow-sm">
                   <CardContent className="p-6">
                     <div className="flex gap-4">
-                      {/* Product Image */}
                       <div className="aspect-square w-24 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
                         <img
                           src={item.image}
@@ -109,7 +133,6 @@ const Cart = () => {
                         />
                       </div>
 
-                      {/* Product Details */}
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start mb-2">
                           <div>
@@ -136,7 +159,9 @@ const Cart = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              onClick={() =>
+                                updateQuantity(item.id, item.quantity - 1)
+                              }
                               className="h-8 w-8"
                             >
                               <Minus className="h-3 w-3" />
@@ -147,13 +172,15 @@ const Cart = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              onClick={() =>
+                                updateQuantity(item.id, item.quantity + 1)
+                              }
                               className="h-8 w-8"
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
                           </div>
-                          
+
                           <div className="text-right">
                             <div className="font-semibold text-foreground">
                               {formatPrice(item.price * item.quantity)}
@@ -172,62 +199,66 @@ const Cart = () => {
               ))}
             </div>
 
-            {/* Order Summary */}
             <div className="lg:col-span-1">
               <Card className="sticky top-24">
                 <CardContent className="p-6">
                   <h2 className="text-lg font-semibold text-foreground mb-4">
                     Order Summary
                   </h2>
-                  
+
                   <div className="space-y-3 mb-4">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">
-                        Subtotal ({demoItemCount} items)
+                        Subtotal ({totalQuantity} items)
                       </span>
-                      <span className="text-foreground">{formatPrice(demoTotal)}</span>
+                      <span className="text-foreground">
+                        {formatPrice(subtotal)}
+                      </span>
                     </div>
-                    
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Shipping</span>
                       <span className="text-foreground">
-                        {shipping === 0 ? 'Free' : formatPrice(shipping)}
+                        {shipping === 0 ? "Free" : formatPrice(shipping)}
                       </span>
                     </div>
-                    
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Tax</span>
-                      <span className="text-foreground">{formatPrice(tax)}</span>
+                      <span className="text-foreground">
+                        {formatPrice(tax)}
+                      </span>
                     </div>
                   </div>
-                  
+
                   <Separator className="my-4" />
-                  
+
                   <div className="flex justify-between font-semibold text-foreground mb-6">
                     <span>Total</span>
                     <span>{formatPrice(finalTotal)}</span>
                   </div>
-                  
+
                   {shipping > 0 && (
                     <div className="bg-accent/50 rounded-lg p-3 mb-6">
                       <p className="text-sm text-muted-foreground">
-                        Add {formatPrice(100 - demoTotal)} more for free shipping
+                        Add {formatPrice(100 - subtotal)} more for free shipping
                       </p>
                     </div>
                   )}
-                  
+
                   <div className="space-y-3">
-                    <Button size="lg" className="w-full">
+                    <Button
+                      size="lg"
+                      className="w-full"
+                      onClick={proceedToCheckout}
+                    >
                       Proceed to Checkout
                     </Button>
-                    
                     <Link to="/shop">
                       <Button variant="outline" size="lg" className="w-full">
                         Continue Shopping
                       </Button>
                     </Link>
                   </div>
-                  
+
                   <div className="mt-6 text-center">
                     <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                       <span>Secure checkout</span>
@@ -241,7 +272,6 @@ const Cart = () => {
           </div>
         </div>
       </div>
-      
       <Footer />
     </>
   );

@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth, fireDB } from "../firebase/FirebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 
 // Firestore user type
 export interface FirestoreUser {
@@ -27,6 +28,7 @@ interface MyContextType {
   firestoreUser: FirestoreUser | null;
   isProfileComplete: boolean;
   setFirestoreUser: React.Dispatch<React.SetStateAction<FirestoreUser | null>>;
+  cartItems: any[]; 
 }
 
 export const MyContext = createContext<MyContextType>({
@@ -36,6 +38,7 @@ export const MyContext = createContext<MyContextType>({
   firestoreUser: null,
   isProfileComplete: false,
   setFirestoreUser: () => {},
+  cartItems: [], 
 });
 
 export const MyContextProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -47,6 +50,20 @@ export const MyContextProvider: React.FC<{ children: React.ReactNode }> = ({
     null
   );
   const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const [cartItems, setCartItems] = useState<any[]>([]);
+
+useEffect(() => {
+  if (!auth.currentUser) return;
+
+  const cartRef = collection(fireDB, "users", auth.currentUser.uid, "cart");
+  const unsubscribe = onSnapshot(cartRef, (snapshot) => {
+    const items: any[] = [];
+    snapshot.forEach((doc) => items.push(doc.data()));
+    setCartItems(items);
+  });
+
+  return () => unsubscribe();
+}, [auth.currentUser]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -96,6 +113,7 @@ export const MyContextProvider: React.FC<{ children: React.ReactNode }> = ({
         firestoreUser,
         isProfileComplete,
         setFirestoreUser,
+        cartItems,
       }}
     >
       {children}

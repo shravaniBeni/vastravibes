@@ -1,12 +1,13 @@
 import { ArrowRight, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
-
+import { collection, getDocs } from "firebase/firestore";
+import { fireDB } from "@/firebase/FirebaseConfig";
 // Import product and hero images
 import heroModel from "@/assets/hero-model.jpg";
 import thriftHero from "@/assets/thrift-hero.jpg";
@@ -16,10 +17,18 @@ import ribbedSweater from "@/assets/ribbed-sweater.jpg";
 import whiteShirt from "@/assets/white-shirt.jpg";
 import blackDress from "@/assets/black-dress.jpg";
 import linenBlazer from "@/assets/linen-blazer.jpg";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [designers, setDesigners] = useState<any[]>([]);
+  const [scrollPos, setScrollPos] = useState(0);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const navigate = useNavigate();
 
+  const handleCardClick = (uid: string) => {
+    navigate(`/designer/${uid}`);
+  };
   const heroSlides = [
     {
       id: 1,
@@ -90,11 +99,31 @@ const Index = () => {
     },
   ];
 
-  const designers = [
-    { name: "Bennakir", avatar: "", followers: "2.3k" },
-    { name: "Christen", avatar: "", followers: "1.8k" },
-    { name: "Mina Foir", avatar: "", followers: "3.2k" },
-  ];
+  useEffect(() => {
+    const fetchDesigners = async () => {
+      const querySnapshot = await getDocs(collection(fireDB, "users"));
+      const users = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setDesigners(users);
+    };
+    fetchDesigners();
+  }, []);
+
+  const scroll = (direction: "left" | "right") => {
+    if (!scrollRef.current) return;
+    const scrollAmount = 300;
+    const newScroll =
+      direction === "left"
+        ? scrollRef.current.scrollLeft - scrollAmount
+        : scrollRef.current.scrollLeft + scrollAmount;
+
+    scrollRef.current.scrollTo({
+      left: newScroll,
+      behavior: "smooth",
+    });
+  };
 
   // Auto-advance slides - SIMPLE VERSION
   useEffect(() => {
@@ -200,11 +229,18 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {/* Dresses */}
               <Link to="/shop?category=dresses">
-                <Card className="group cursor-pointer transition-all duration-300 hover:shadow-xl aspect-[4/5] relative overflow-hidden">
-                  <CardContent className="p-0 h-full">
-                    <div className="h-full bg-gray-200 flex items-end">
-                      <div className="p-8 w-full">
-                        <h3 className="text-2xl font-serif font-semibold text-foreground group-hover:text-primary transition-colors">
+                <Card className="group cursor-pointer transition-all duration-500 hover:shadow-xl hover:scale-[1.03] aspect-[4/5] relative overflow-hidden">
+                  <CardContent className="p-0 h-full relative">
+                    <div
+                      className="h-full flex items-end bg-cover bg-center"
+                      style={{
+                        backgroundImage:
+                          "url('https://littleboxindia.com/cdn/shop/files/Tie_Shoulder_Layered_Ruched_Cami_Dress_In_Pink.jpg?v=1754569211')",
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all"></div>
+                      <div className="p-8 w-full relative z-10">
+                        <h3 className="text-2xl font-serif font-semibold text-white group-hover:text-primary transition-colors">
                           Dresses
                         </h3>
                       </div>
@@ -215,11 +251,21 @@ const Index = () => {
 
               {/* Tops */}
               <Link to="/shop?category=tops">
-                <Card className="group cursor-pointer transition-all duration-300 hover:shadow-xl aspect-[4/5] relative overflow-hidden">
-                  <CardContent className="p-0 h-full">
-                    <div className="h-full bg-gray-300 flex items-end">
-                      <div className="p-8 w-full">
-                        <h3 className="text-2xl font-serif font-semibold text-foreground group-hover:text-primary transition-colors">
+                <Card className="group cursor-pointer transition-all duration-500 hover:shadow-xl hover:scale-[1.03] aspect-[4/5] relative overflow-hidden">
+                  <CardContent className="p-0 h-full relative">
+                    <div
+                      className="h-full flex items-end bg-cover bg-center"
+                      style={{
+                        backgroundImage:
+                          "url('https://littleboxindia.com/cdn/shop/products/Cropped_Vest_Ruffle_Top_In_Blush_Pink.jpg?v=1740749788')",
+                      }}
+                    >
+                      {/* Overlay for better text contrast */}
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all"></div>
+
+                      {/* Text content */}
+                      <div className="p-8 w-full relative z-10">
+                        <h3 className="text-2xl font-serif font-semibold text-white group-hover:text-primary transition-colors">
                           Tops
                         </h3>
                       </div>
@@ -230,11 +276,21 @@ const Index = () => {
 
               {/* Pants */}
               <Link to="/shop?category=pants">
-                <Card className="group cursor-pointer transition-all duration-300 hover:shadow-xl aspect-[4/5] relative overflow-hidden">
-                  <CardContent className="p-0 h-full">
-                    <div className="h-full bg-gray-200 flex items-end">
-                      <div className="p-8 w-full">
-                        <h3 className="text-2xl font-serif font-semibold text-foreground group-hover:text-primary transition-colors">
+                <Card className="group cursor-pointer transition-all duration-500 hover:shadow-xl hover:scale-[1.03] aspect-[4/5] relative overflow-hidden">
+                  <CardContent className="p-0 h-full relative">
+                    <div
+                      className="h-full flex items-end bg-cover bg-center"
+                      style={{
+                        backgroundImage:
+                          "url('https://littleboxindia.com/cdn/shop/products/front_view_of_Y2K_Baggy_Fit_Women_Cargo_In_Black.jpg?v=1742195515')",
+                      }}
+                    >
+                      {/* Overlay for contrast */}
+                      <div className="absolute inset-0 bg-black/25 group-hover:bg-black/10 transition-all"></div>
+
+                      {/* Text content */}
+                      <div className="p-8 w-full relative z-10">
+                        <h3 className="text-2xl font-serif font-semibold text-white group-hover:text-primary transition-colors">
                           Pants
                         </h3>
                       </div>
@@ -247,11 +303,21 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Accessories */}
               <Link to="/shop?category=accessories">
-                <Card className="group cursor-pointer transition-all duration-300 hover:shadow-xl aspect-[2/1] relative overflow-hidden">
-                  <CardContent className="p-0 h-full">
-                    <div className="h-full bg-gray-300 flex items-end">
-                      <div className="p-8 w-full">
-                        <h3 className="text-2xl font-serif font-semibold text-foreground group-hover:text-primary transition-colors">
+                <Card className="group cursor-pointer transition-all duration-500 hover:shadow-xl hover:scale-[1.03] aspect-[2/1] relative overflow-hidden">
+                  <CardContent className="p-0 h-full relative">
+                    <div
+                      className="h-full flex items-end bg-cover bg-center"
+                      style={{
+                        backgroundImage:
+                          "url('https://images.meesho.com/images/products/429414389/5a9n5_512.avif?width=512')",
+                      }}
+                    >
+                      {/* Overlay for better readability */}
+                      <div className="absolute inset-0 bg-black/25 group-hover:bg-black/10 transition-all"></div>
+
+                      {/* Text content */}
+                      <div className="p-8 w-full relative z-10">
+                        <h3 className="text-2xl font-serif font-semibold text-white group-hover:text-primary transition-colors">
                           Accessories
                         </h3>
                       </div>
@@ -262,12 +328,22 @@ const Index = () => {
 
               {/* Jewelry */}
               <Link to="/shop?category=jewelry">
-                <Card className="group cursor-pointer transition-all duration-300 hover:shadow-xl aspect-[2/1] relative overflow-hidden">
-                  <CardContent className="p-0 h-full">
-                    <div className="h-full bg-gray-200 flex items-end">
-                      <div className="p-8 w-full">
-                        <h3 className="text-2xl font-serif font-semibold text-foreground group-hover:text-primary transition-colors">
-                          Jewelry
+                <Card className="group cursor-pointer transition-all duration-500 hover:shadow-xl hover:scale-[1.03] aspect-[2/1] relative overflow-hidden">
+                  <CardContent className="p-0 h-full relative">
+                    <div
+                      className="h-full flex items-end bg-cover bg-center"
+                      style={{
+                        backgroundImage:
+                          "url('https://www.net-a-porter.com/variants/images/1647597321998224/in/w2000_q60.jpg')",
+                      }}
+                    >
+                      {/* Overlay for contrast */}
+                      <div className="absolute inset-0 bg-black/25 group-hover:bg-black/10 transition-all"></div>
+
+                      {/* Text content */}
+                      <div className="p-8 w-full relative z-10">
+                        <h3 className="text-2xl font-serif font-semibold text-white group-hover:text-primary transition-colors">
+                          Hand-craft
                         </h3>
                       </div>
                     </div>
@@ -279,7 +355,7 @@ const Index = () => {
         </section>
 
         {/* Featured Designers Section */}
-        <section className="py-20 bg-background">
+        <section className="py-20 bg-background relative">
           <div className="container-custom">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-serif font-semibold text-foreground mb-4">
@@ -287,17 +363,46 @@ const Index = () => {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            {/* Chevron Buttons */}
+            <button
+              onClick={() => scroll("left")}
+              className="absolute left-8 top-1/2 transform -translate-y-1/2 bg-background/70 hover:bg-background p-3 rounded-full shadow-md z-10"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
+            <button
+              onClick={() => scroll("right")}
+              className="absolute right-8 top-1/2 transform -translate-y-1/2 bg-background/70 hover:bg-background p-3 rounded-full shadow-md z-10"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+
+            {/* Scrollable Designer Cards */}
+            <div
+              ref={scrollRef}
+              className="flex overflow-x-scroll no-scrollbar gap-8 justify-center px-10 scroll-smooth"
+            >
               {designers.map((designer) => (
                 <Card
-                  key={designer.name}
-                  className="text-center group cursor-pointer transition-all duration-300 hover:shadow-lg"
+                  key={designer.uid}
+                  onClick={() => handleCardClick(designer.uid)}
+                  className="min-w-[300px] text-center group cursor-pointer transition-all duration-300 hover:shadow-lg flex-shrink-0"
                 >
                   <CardContent className="p-8">
-                    <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-6 group-hover:scale-105 transition-transform"></div>
-                    <h3 className="text-xl font-semibold text-foreground mb-4">
-                      {designer.name}
+                    <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-6 overflow-hidden">
+                      <img
+                        src={designer.avatar}
+                        alt={designer.firstName}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <h3 className="text-xl font-semibold text-foreground mb-2">
+                      {designer.firstName} {designer.lastName}
                     </h3>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      {designer.specialty}
+                    </p>
                     <Button variant="outline" className="w-full font-medium">
                       Follow
                     </Button>

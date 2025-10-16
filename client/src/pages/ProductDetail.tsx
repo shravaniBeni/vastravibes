@@ -7,6 +7,10 @@ import { useParams } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { fireDB } from "../firebase/FirebaseConfig";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "@/components/ui/use-toast";
+
+import { auth } from "../firebase/FirebaseConfig"; // Firebase Auth instance
+import { collection, setDoc, updateDoc } from "firebase/firestore";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +27,60 @@ const ProductDetail = () => {
       setSelectedImage(product.images[0]); // ✅ Initially first image
     }
   }, [product]);
+
+  const addToCart = async () => {
+    if (!auth.currentUser) {
+      toast({
+        title: "Not logged in",
+        description: "Please login to add items to cart.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedColor || !selectedSize) {
+      toast({
+        title: "Selection required",
+        description: "Please select color and size.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const userId = auth.currentUser.uid;
+    const cartDocRef = doc(fireDB, "users", userId, "cart", id); // id = productId
+
+    try {
+      const cartItemSnap = await getDoc(cartDocRef);
+
+      if (cartItemSnap.exists()) {
+        // If item already in cart, update quantity
+        await updateDoc(cartDocRef, {
+          quantity: cartItemSnap.data().quantity + quantity,
+        });
+      } else {
+        // Add new item to cart
+        await setDoc(cartDocRef, {
+          productId: id,
+          name: product.name,
+          price: product.price,
+          image: selectedImage,
+          color: selectedColor,
+          size: selectedSize,
+          quantity: quantity,
+        });
+      }
+
+      toast({
+        title: "Added to Cart",
+        description: `${product.name} has been added to your cart.`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("Failed to add to cart.");
+    }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -93,7 +151,7 @@ const ProductDetail = () => {
       {/* Top Profile Bar */}
       <div
         className="flex items-center gap-4 mb-6 border-b pb-4 mt-2 cursor-pointer"
-       onClick={() => navigate(`/designer/${product.ownerId}`)}
+        onClick={() => navigate(`/designer/${product.ownerId}`)}
       >
         <img
           src={product.ownerAvatar || "/placeholder.svg"}
@@ -212,6 +270,7 @@ const ProductDetail = () => {
               size="lg"
               className="w-full"
               disabled={!selectedSize || !selectedColor}
+              onClick={addToCart}
             >
               Add to Bag - {formatPrice(product.price * quantity)}
             </Button>
