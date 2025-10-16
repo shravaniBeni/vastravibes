@@ -355,6 +355,7 @@ const Index = () => {
         </section>
 
         {/* Featured Designers Section */}
+        {/* Featured Designers Section */}
         <section className="py-20 bg-background relative">
           <div className="container-custom">
             <div className="text-center mb-16">
@@ -366,14 +367,14 @@ const Index = () => {
             {/* Chevron Buttons */}
             <button
               onClick={() => scroll("left")}
-              className="absolute left-8 top-1/2 transform -translate-y-1/2 bg-background/70 hover:bg-background p-3 rounded-full shadow-md z-10"
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-background/70 hover:bg-background p-3 rounded-r-full shadow-md z-10"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
 
             <button
               onClick={() => scroll("right")}
-              className="absolute right-8 top-1/2 transform -translate-y-1/2 bg-background/70 hover:bg-background p-3 rounded-full shadow-md z-10"
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-background/70 hover:bg-background p-3 rounded-l-full shadow-md z-10"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
@@ -381,13 +382,14 @@ const Index = () => {
             {/* Scrollable Designer Cards */}
             <div
               ref={scrollRef}
-              className="flex overflow-x-scroll no-scrollbar gap-8 justify-center px-10 scroll-smooth"
+              className="flex overflow-x-hidden gap-8 justify-start px-4 md:px-10"
+              style={{ scrollBehavior: "smooth" }}
             >
               {designers.map((designer) => (
                 <Card
                   key={designer.uid}
                   onClick={() => handleCardClick(designer.uid)}
-                  className="min-w-[300px] text-center group cursor-pointer transition-all duration-300 hover:shadow-lg flex-shrink-0"
+                  className="min-w-[300px] md:min-w-[calc((100%/3)-16px)] text-center group cursor-pointer transition-all duration-300 hover:shadow-lg flex-shrink-0"
                 >
                   <CardContent className="p-8">
                     <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-6 overflow-hidden">
